@@ -29,7 +29,7 @@ defmodule Shepherd.Gates.BlocklistDetail do
         _ -> "."
       end
 
-    claude = Path.join(root, "CLAUDE.md")
+    claude = Path.join(root, "AGENTS.md")
     block = Path.join(root, "BLOCKLIST.md")
 
     cond do

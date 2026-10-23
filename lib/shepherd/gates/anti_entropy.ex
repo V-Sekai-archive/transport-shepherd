@@ -116,7 +116,7 @@ defmodule Shepherd.Gates.AntiEntropy do
     state = check(state, "slug matches directory name", mismatches == [], "mismatches: #{fmt(mismatches)}")
 
     # --- C. blocklist rows vs sections ---
-    claude = File.read!(Path.join(rfd, "CLAUDE.md"))
+    claude = File.read!(Path.join(rfd, "AGENTS.md"))
     blocklist = File.read!(Path.join(rfd, "BLOCKLIST.md"))
     rows =
       claude

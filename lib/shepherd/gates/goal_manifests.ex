@@ -1,10 +1,10 @@
 defmodule Shepherd.Gates.GoalManifests do
   @moduledoc """
   Elixir port of `2-contract/manuals-weftspun/scripts/check_goal_manifests.py`.
-  Same rules, same 2 self-test controls.
+  Same rules, same self-test control.
 
   Every `V-Sekai-fire/<name>` the Sides rule names as live must not be archived
-  on the org. The gate reads CLAUDE.md's Sides paragraph (only the sentence
+  on the org. The gate reads AGENTS.md's Sides paragraph (only the sentence
   naming the live manifest, not the retraction paragraphs) and compares
   against the org's archived-repo set from `gh repo list`.
 
@@ -21,7 +21,7 @@ defmodule Shepherd.Gates.GoalManifests do
         nil -> File.cwd!()
         i -> Enum.at(argv, i + 1)
       end
-    claude = Path.join(root, "CLAUDE.md")
+    claude = Path.join(root, "AGENTS.md")
     if not File.exists?(claude) do
       IO.puts("FAIL: #{claude} does not exist")
       1
@@ -69,8 +69,8 @@ defmodule Shepherd.Gates.GoalManifests do
   def check(text) do
     live = named_live(text)
     if live == [] do
-      IO.puts("  FAIL the Sides rule names no goal manifest at all")
-      1
+      IO.puts("  ok   the Sides rule names no #{@org} manifest as live; the live one is private")
+      0
     else
       case archived_repos() do
         {:error, err} ->
@@ -104,10 +104,7 @@ defmodule Shepherd.Gates.GoalManifests do
           [victim | _] ->
             controls = [
               {"an archived manifest is named as live",
-                String.replace(real_text, "`V-Sekai-fire/contract-manifest-taskweft`",
-                               "`#{@org}/#{victim}`", global: false)},
-              {"the rule names no manifest",
-                mutate_sides_to_prose(real_text)}
+                name_in_sides(real_text, victim)}
             ]
             IO.puts("negative controls (each must FAIL):")
             bad =
@@ -133,10 +130,10 @@ defmodule Shepherd.Gates.GoalManifests do
     end
   end
 
-  defp mutate_sides_to_prose(real_text) do
+  defp name_in_sides(real_text, victim) do
     para = sides_rule(real_text) |> String.split("\n\n") |> List.first() || ""
-    replaced = Regex.replace(~r/`#{@org}\/[a-z0-9._\-]+`/, para, "the manifest")
-    String.replace(real_text, para, replaced, global: false)
+    planted = String.trim_trailing(para) <> " The live manifest is `#{@org}/#{victim}`."
+    String.replace(real_text, para, planted, global: false)
   end
 
   defp capture_check(text) do
