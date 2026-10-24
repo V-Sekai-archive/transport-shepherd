@@ -3,15 +3,15 @@ defmodule Shepherd.Gates.RfdStateCanonical do
   Elixir port of `2-contract/manuals-weftspun/scripts/check_rfd_state_canonical.py`.
   Same rules, same 3 self-test controls.
 
-  Every RFD README's `**State:**` field is one of the canonical values RFD
-  1000 lists. Four RFDs on 2026-09-03 carried a parenthetical annotation
+  Every RFD README's `**State:**` field is one of the canonical values
+  RFD66606-1000 lists. Four RFDs on 2026-09-03 carried a parenthetical annotation
   after the value ("discussion (implemented 2026-09-01...)"), which is
   neither canonical nor parseable by strict tooling; this gate refuses
   that shape.
 
-  The state list is read out of RFD 1000 rather than restated, so this
+  The state list is read out of RFD66606-1000 rather than restated, so this
   gate and the document cannot drift. Fallback to a frozen list only if
-  RFD 1000's README is missing or unparseable.
+  RFD66606-1000's README is missing or unparseable.
   """
 
   @fallback_states MapSet.new(~w(prediscussion ideation discussion published committed abandoned moved))

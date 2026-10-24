@@ -2,12 +2,12 @@ defmodule Shepherd.Bao do
   @moduledoc """
   Thin Bao HTTP client. Reads `BAO_ADDR` and `BAO_TOKEN` from env. Never
   reads `~/.bao-token`: on a shared-`$HOME` box it is one file for every
-  agent (RFD 2195 DETAILS §"stale token file").
+  agent (RFD66606-2195 DETAILS §"stale token file").
 
   Wraps only what `status` and `gates` need: raw HTTP verbs plus KV v2
   read/write. The PKI, cert-auth and identity-group calls were trimmed
   after the enrol/rotate/migrate/revoke ceremony went; if those calls
-  are needed again, retrofit from RFD 2195 DETAILS §"stale token file"
+  are needed again, retrofit from RFD66606-2195 DETAILS §"stale token file"
   (same pointer `lib/shepherd/cli.ex` already names).
   """
 

@@ -9,8 +9,8 @@ defmodule Shepherd.CLI do
 
   The enrol / rotate / migrate / revoke ceremony was trimmed after
   per-agent `BAO_TOKEN` + `bao login -no-store` closed the stale-token
-  failure mode RFD 2195 was written against. If those commands are
-  needed again, retrofit from RFD 2195 DETAILS §"stale token file".
+  failure mode RFD66606-2195 was written against. If those commands are
+  needed again, retrofit from RFD66606-2195 DETAILS §"stale token file".
   """
 
   # Burrito invokes main/1 with argv.

@@ -3,7 +3,7 @@ defmodule Shepherd.Gates.GgmlSingleton do
   Elixir port of `2-contract/manuals-weftspun/scripts/check_ggml_singleton.py`.
   Same rules, same 3 self-test controls.
 
-  Only one GGML source tree lives in the workspace (RFD 2188) at
+  Only one GGML source tree lives in the workspace (RFD66606-2188) at
   `2-contract/ggml`. This gate walks the workspace and refuses a rogue
   `ggml.h` or `ggml.c` outside that path. Vendored llama.cpp is exempt
   per CLAUDE.md's ggml row (a vendor's own runtime is exempted).
