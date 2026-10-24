@@ -1,7 +1,7 @@
 # transport-shepherd design
 
 The one-command-per-operation surface is above; this document is the
-operational model behind each command and the RFD 2195 DETAILS gotchas
+operational model behind each command and the RFD66606-2195 DETAILS gotchas
 retained as reference for the ceremony that used to live here.
 
 ## Operating model
@@ -43,7 +43,7 @@ The classes the CLI recognises:
 - **shape** (malformed CSR, unreadable cert, wrong CA chain): stop, do
   not retry, exit non-zero.
 
-## RFD 2195 gotchas the trimmed commands internalised
+## RFD66606-2195 gotchas the trimmed commands internalised
 
 Kept as reference for retrofit. Still true about the ceremony that
 existed:
@@ -88,5 +88,5 @@ existed:
 - Not a general Bao client; only the calls `status` needs.
 - Not a policy editor; changes to `agents-rw` or `mps-admin` are done
   by hand through `weftspun/dot-claude` review.
-- Not a group definer; groups are declared in RFD 2202 and reconciled
+- Not a group definer; groups are declared in RFD66606-2202 and reconciled
   by hand for now.
