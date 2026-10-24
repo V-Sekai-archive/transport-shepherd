@@ -1,17 +1,17 @@
 defmodule Shepherd.Gates.CommitStyle do
   @moduledoc """
   Elixir port of `2-contract/manuals-weftspun/scripts/check_commit_style.py`.
-  Same rules, same 12 self-test controls (6 subject, 4 through the CLI path
+  Same rules, same 13 self-test controls (7 subject, 4 through the CLI path
   on an own and a fork remote, 2 on a merged upstream commit).
 
   Commit subjects are sentence-case prose with no Conventional-Commits
-  prefix on every repository we commit to, forks included (RFD 2026), so
+  prefix on every repository we commit to, forks included (RFD66606-2026), so
   the gate reads no remote. Every commit reachable from HEAD and from
   neither `--base` nor any `--exclude` ref is checked for:
 
   1. No Conventional-Commits prefix (`^[a-z][a-z0-9-]*(\\([^)]+\\))?!?:`).
   2. First char uppercase / digit / bracket / backtick.
-  3. No trailing period.
+  3. No trailing period, and no bare `RFD NNNN` (RFD66606-1000 writes RFD66606-NNNN).
 
   Detection floor: none. Every subject is either ok or FAIL with the
   specific rule violated.
@@ -20,6 +20,7 @@ defmodule Shepherd.Gates.CommitStyle do
   @conventional_rx ~r/^[a-z][a-z0-9-]*(\([^)]+\))?!?:/
   @sentence_start_rx ~r/^([A-Z]|\d|\[|`)/
   @trailing_period_rx ~r/\.$/
+  @bare_rfd_rx ~r/\bRFDs?\s+\d{4}\b/
   @git_env Enum.map(
              ~w(GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY
                 GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_PREFIX GIT_COMMON_DIR),
@@ -42,11 +43,13 @@ defmodule Shepherd.Gates.CommitStyle do
   def check_subject(subject) do
     []
     |> maybe_add(Regex.match?(@conventional_rx, subject),
-      "Conventional-Commits prefix (RFD 2026 says sentence-case prose)")
+      "Conventional-Commits prefix (RFD66606-2026 says sentence-case prose)")
     |> maybe_add(not Regex.match?(@sentence_start_rx, subject),
       "first char not uppercase / digit / bracket")
     |> maybe_add(Regex.match?(@trailing_period_rx, subject),
       "trailing period")
+    |> maybe_add(Regex.match?(@bare_rfd_rx, subject),
+      "bare RFD NNNN (RFD66606-1000 writes RFD66606-NNNN)")
   end
 
   defp maybe_add(list, false, _), do: list
@@ -136,7 +139,8 @@ defmodule Shepherd.Gates.CommitStyle do
   def self_test do
     subject_cases = [
       {"Add the macOS and Windows release workflows", 0, "plain sentence"},
-      {"RFD 2026: Commit messages sentence case", 0, "RFD prefix, sentence body"},
+      {"RFD66606-2026: Commit messages sentence case", 0, "RFD prefix, sentence body"},
+      {"RFD 2026: Commit messages sentence case", 1, "bare RFD prefix"},
       {"[urgent] Fix the leaking file descriptor", 0, "bracket-tag open"},
       {"feat: add the release workflow", 2, "conventional-commits + not-capital"},
       {"fix(parser): handle nested arrays", 2, "conventional-commits w/ scope + not-capital"},
