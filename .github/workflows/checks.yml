@@ -1,0 +1,68 @@
+# transport-shepherd's Checks. `test/` holds only test_helper.exs, so a bare
+# `mix test` reports success while running nothing. The real check is the gates'
+# own self-tests: every gate module implements self_test/0 with planted controls.
+name: Checks
+
+on:
+  pull_request:
+  merge_group:
+  # A push to main fills the cache a pull request run restores.
+  push:
+    branches: [main]
+  schedule:
+    # Nightly, so a defect a merge introduced is caught with no pull request open.
+    - cron: "17 5 * * *"
+
+concurrency:
+  # One run per branch: a newer pull_request run cancels the older one still
+  # running; a merge_group entry, a push or a scheduled run is never cancelled.
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      # Pinned, not floated: a toolchain bump should arrive as a diff somebody
+      # approves. The same versions the manuals repo's checks.yml pins.
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "29"
+          elixir-version: "1.20.4"
+      - run: mix deps.get
+      - run: mix compile
+      # The gate list comes from the dispatcher itself, so a gate is covered the
+      # moment it is registered. A gate whose self-test fails fails the job.
+      - name: Run every gate's self-test
+        run: |
+          ran=0
+          failed=0
+          skipped=0
+          while read -r gate; do
+            # goal-manifests reads AGENTS.md from this checkout and asks the org
+            # which repos are archived. This repository carries no AGENTS.md, so
+            # its precondition is unmet: skip it by name, never silently.
+            if [ "$gate" = goal-manifests ] && [ ! -f AGENTS.md ]; then
+              echo "SKIP goal-manifests: no AGENTS.md in this repository"
+              skipped=$((skipped + 1))
+              continue
+            fi
+            if mix gates "$gate" --self-test; then
+              ran=$((ran + 1))
+            else
+              echo "::error::gate self-test failed: $gate"
+              failed=$((failed + 1))
+            fi
+          done < <(mix gates | awk '/^  /{print $1}')
+          echo "gate self-tests: $ran ran, $skipped skipped by name, $failed failed"
+          # A silent skip reads exactly like a pass: if nothing ran, FAIL.
+          if [ "$ran" -eq 0 ]; then
+            echo "::error::no gate self-test ran, so the check would be vacuous"
+            exit 1
+          fi
+          [ "$failed" -eq 0 ]
