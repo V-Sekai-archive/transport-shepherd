@@ -1,7 +1,7 @@
 defmodule Shepherd.Gates.RfdStateCanonical do
   @moduledoc """
   Elixir port of `2-contract/manuals-weftspun/scripts/check_rfd_state_canonical.py`.
-  Same rules, same 3 self-test controls.
+  Same rules, same 4 self-test controls.
 
   Every RFD README's `**State:**` field is one of the canonical values RFD
   1000 lists. Four RFDs on 2026-09-03 carried a parenthetical annotation
@@ -14,7 +14,7 @@ defmodule Shepherd.Gates.RfdStateCanonical do
   RFD 1000's README is missing or unparseable.
   """
 
-  @fallback_states MapSet.new(~w(prediscussion ideation discussion published committed abandoned moved))
+  @fallback_states MapSet.new(~w(prediscussion ideation discussion published committed abandoned))
   @rfd_dir_rx ~r/^[12]\d{3}-[a-z0-9-]+$/
   @state_line_rx ~r/^\*\*State:\*\*\s*(.+?)\s*$/m
   @state_list_rx ~r/has a state:\s*([a-z,\s]+?)\./s
@@ -102,7 +102,7 @@ defmodule Shepherd.Gates.RfdStateCanonical do
     File.mkdir_p!(Path.join(tmp, "rfd/1000-conventions"))
     File.write!(Path.join(tmp, "rfd/1000-conventions/README.md"),
       "# RFD 1000\n\nEach RFD has a state: prediscussion, ideation, " <>
-      "discussion, published, committed, abandoned, or moved.\n")
+      "discussion, published, committed, or abandoned.\n")
 
     File.mkdir_p!(Path.join(tmp, "rfd/1001-ok"))
     File.write!(Path.join(tmp, "rfd/1001-ok/README.md"),
@@ -123,12 +123,20 @@ defmodule Shepherd.Gates.RfdStateCanonical do
     names = bad |> Enum.map(&elem(&1, 0)) |> Enum.sort()
     unknown_caught? = names == ["1002-bad", "1003-unknown"]
 
+    File.mkdir_p!(Path.join(tmp, "rfd/1004-moved"))
+    File.write!(Path.join(tmp, "rfd/1004-moved/README.md"),
+      "# RFD 1004\n\n**State:** moved\n")
+    bad = scan(tmp)
+    names = bad |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+    dropped_caught? = names == ["1002-bad", "1003-unknown", "1004-moved"]
+
     File.rm_rf!(tmp)
 
     checks = [
       {"positive control: clean State passes", positive_ok?},
       {"negative control: parenthetical annotation rejected", paren_caught?},
-      {"negative control: unknown state rejected", unknown_caught?}
+      {"negative control: unknown state rejected", unknown_caught?},
+      {"negative control: the dropped state is rejected", dropped_caught?}
     ]
     Enum.each(checks, fn {name, ok} ->
       IO.puts("  #{if ok, do: "ok  ", else: "FAIL"} #{name}")
